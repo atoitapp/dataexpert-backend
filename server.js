@@ -10,7 +10,7 @@ app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
 // Database stored in server root (ephemeral)
-const DB_PATH = path.join(__dirname, "dataexpert.db");
+const DB_PATH = path.join(__dirname, "expert_log_database.db");
 
 // Connect to SQLite
 const db = new sqlite3.Database(DB_PATH, (err) => {
@@ -75,3 +75,4 @@ app.get("/data", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
