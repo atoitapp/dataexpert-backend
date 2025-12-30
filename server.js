@@ -78,7 +78,7 @@ app.listen(PORT, () => {
 
 // View database in a Table
 app.get("/view-db", (req, res) => {
-  db.all("SELECT * FROM experts", [], (err, rows) => {
+  db.all("SELECT * FROM expert_log", [], (err, rows) => {
     if (err) return res.status(500).send(err.message);
 
     // Create a simple HTML table
@@ -98,6 +98,7 @@ app.get("/view-db", (req, res) => {
     res.send(html);
   });
 });
+
 
 
 
