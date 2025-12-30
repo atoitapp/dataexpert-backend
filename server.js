@@ -76,3 +76,28 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
+// View database in a Table
+app.get("/view-db", (req, res) => {
+  db.all("SELECT * FROM experts", [], (err, rows) => {
+    if (err) return res.status(500).send(err.message);
+
+    // Create a simple HTML table
+    let html = "<h2>Experts Table</h2>";
+    html += "<table border='1' cellpadding='5' cellspacing='0'>";
+    html += "<tr><th>ID</th><th>Name</th><th>Skill</th></tr>";
+
+    rows.forEach(row => {
+      html += `<tr>
+        <td>${row.id}</td>
+        <td>${row.name}</td>
+        <td>${row.skill}</td>
+      </tr>`;
+    });
+
+    html += "</table>";
+    res.send(html);
+  });
+});
+
+
+
