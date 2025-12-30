@@ -76,12 +76,7 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-// View database in a Table
-app.get("/view-db", (req, res) => {
-  db.all("SELECT * FROM expert_log", [], (err, rows) => {
-    if (err) return res.status(500).send(err.message);
-
-    // Create a simple HTML table
+// Create a simple HTML table
     let html = "<h2>Experts Table</h2>";
     html += "<table border='1' cellpadding='5' cellspacing='0'>";
     html += "<tr><th>ID</th><th>Name</th><th>Date</th><th>Total Men</th><th>Total Women</th><th>Total Syringes</th><th>Total Pipes</th><th>Total Sandwichs</th><th>Notes</th><th>Total Soup</th></tr>";
@@ -91,13 +86,13 @@ app.get("/view-db", (req, res) => {
         <td>${row.id}</td>
         <td>${row.name}</td>
         <td>${row.date}</td>
-        <td>${row.Total Men}</td>
-        <td>${row.Total Women}</td>
-        <td>${row.Total Syringes}</td>
-        <td>${row.Total Pipes}</td>
-        <td>${row.Total Sandwich}</td>
-        <td>${row.Notes}</td>
-        <td>${row.Total Soup}</td>
+        <td>${row.totalMen}</td>
+        <td>${row.totalWomen}</td>
+        <td>${row.totalSyringe}</td>
+        <td>${row.totalPipe}</td>
+        <td>${row.totalSandwich}</td>
+        <td>${row.notes}</td>
+        <td>${row.totalSoup}</td>
       </tr>`;
     });
 
@@ -105,5 +100,6 @@ app.get("/view-db", (req, res) => {
     res.send(html);
   });
 });
+
 
 
