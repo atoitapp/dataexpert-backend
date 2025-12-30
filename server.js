@@ -72,18 +72,18 @@ app.get("/data", (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// View database in a table
+app.get("/view-db", (req, res) => {
+  db.all("SELECT * FROM expert_log", [], (err, rows) => {
+    if (err) return res.status(500).send(err.message);
 
-// Create a simple HTML table
     let html = "<h2>Experts Table</h2>";
     html += "<table border='1' cellpadding='5' cellspacing='0'>";
     html += "<tr><th>ID</th><th>Name</th><th>Date</th><th>Total Men</th><th>Total Women</th><th>Total Syringes</th><th>Total Pipes</th><th>Total Sandwichs</th><th>Notes</th><th>Total Soup</th></tr>";
 
     rows.forEach(row => {
       html += `<tr>
-        <td>${row.id}</td>
+        <td>${row.logId}</td>
         <td>${row.name}</td>
         <td>${row.date}</td>
         <td>${row.totalMen}</td>
@@ -100,6 +100,7 @@ app.listen(PORT, () => {
     res.send(html);
   });
 });
-
-
-
+//This should be at the end of the code
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
