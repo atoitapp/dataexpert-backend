@@ -154,6 +154,95 @@ app.get("/camps", async (req, res) => {
 });
 
 /* =========================
+   View database as HTML
+   ========================= */
+// View Expert_log
+
+app.get("/view-db", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM expert_log");
+    let html = "<h2>Expert Log</h2><table border='1'>";
+    html += `
+      <tr>
+        <th>ID</th><th>Name</th><th>Date</th>
+        <th>Men</th><th>Women</th><th>Syringe</th>
+        <th>Pipe</th><th>Sandwich</th><th>Soup</th><th>Notes</th>
+      </tr>
+    `;
+
+    result.rows.forEach(r => {
+      html += `
+        <tr>
+          <td>${r.logid}</td>
+          <td>${r.name}</td>
+          <td>${r.date}</td>
+          <td>${r.totalmen}</td>
+          <td>${r.totalwomen}</td>
+          <td>${r.totalsyringe}</td>
+          <td>${r.totalpipe}</td>
+          <td>${r.totalsandwich}</td>
+          <td>${r.totalsoup}</td>
+          <td>${r.notes}</td>
+        </tr>
+      `;
+    });
+
+    html += "</table>";
+    res.send(html);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+// View Expert_Camp
+
+app.get("/view-camps", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM expert_camp");
+    let html = "<h2>Expert Camps</h2><table border='1'>";
+    html += `
+      <tr>
+        <th>ID</th><th>Name</th><th>Date</th>
+        <th>Lat</th><th>Lon</th>
+        <th>Men</th><th>Women</th>
+        <th>Syringe</th><th>Pipe</th>
+        <th>Sandwich</th><th>Soup</th>
+        <th>Type</th><th>Notes</th>
+        <th>Log ID</th><th>Time</th>
+      </tr>
+    `;
+
+    result.rows.forEach(r => {
+      html += `
+        <tr>
+          <td>${r.campid}</td>
+          <td>${r.name}</td>
+          <td>${r.date}</td>
+          <td>${r.expertlat}</td>
+          <td>${r.expertlon}</td>
+          <td>${r.men}</td>
+          <td>${r.women}</td>
+          <td>${r.syringe}</td>
+          <td>${r.pipe}</td>
+          <td>${r.sandwich}</td>
+          <td>${r.soup}</td>
+          <td>${r.type}</td>
+          <td>${r.campnotes}</td>
+          <td>${r.logid}</td>
+          <td>${r.nowtime}</td>
+        </tr>
+      `;
+    });
+
+    html += "</table>";
+    res.send(html);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+
+/* =========================
    Start server
    ========================= */
 
