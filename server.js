@@ -110,7 +110,7 @@ app.get("/view-db", async (req, res) => {
 
     let html = "<h2>Experts Table</h2>";
     html += "<table border='1' cellpadding='5' cellspacing='0'>";
-    html += "<tr><th>ID</th><th>Name</th><th>Date</th><th>Total Men</th><th>Total Women</th><th>Total Syringes</th><th>Total Pipes</th><th>Total Sandwiches</th><th>Notes</th><th>Total Soup</th></tr>";
+    html += "<tr><th>ID</th><th>Name</th><th>Date</th><th>Total Men</th><th>Total Women</th><th>Total Syringes</th><th>Total Pipes</th><th>Total Sandwiches</th><th>Total Soup</th><th>Notes</th></tr>";
 
     rows.forEach(row => {
       html += `<tr>
@@ -122,8 +122,8 @@ app.get("/view-db", async (req, res) => {
         <td>${row.totalsyringe}</td>
         <td>${row.totalpipe}</td>
         <td>${row.totalsandwich}</td>
-        <td>${row.notes}</td>
         <td>${row.totalsoup}</td>
+        <td>${row.notes}</td>
       </tr>`;
     });
 
@@ -141,3 +141,4 @@ app.get("/view-db", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
