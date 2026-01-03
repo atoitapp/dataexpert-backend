@@ -72,40 +72,38 @@ initTables();
    Routes
    ========================= */
 
-// Save new expert log (UUID comes from Kotlin)
+// Save new expert log (ID comes from Kotlin)
 app.post("/save", async (req, res) => {
   try {
     const { logId, name, date, totalMen, totalWomen, totalSyringe, totalPipe, totalSandwich, notes, totalSoup } = req.body;
 
-    const result = await pool.query(
+    await pool.query(
       `INSERT INTO expert_log
        (logId, name, date, totalMen, totalWomen, totalSyringe, totalPipe, totalSandwich, notes, totalSoup)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-       RETURNING logId`,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
       [logId, name, date, totalMen, totalWomen, totalSyringe, totalPipe, totalSandwich, notes, totalSoup]
     );
 
-    res.json({ success: true, logId: result.rows[0].logid });
+    res.json({ success: true }); // no ID returned
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// Save new expert camp (UUID comes from Kotlin)
+// Save new expert camp (ID comes from Kotlin)
 app.post("/save-camp", async (req, res) => {
   try {
     const { campId, name, date, expertLat, expertLon, men, women, syringe, pipe, sandwich, type, campNotes, logId, nowTime, soup } = req.body;
 
-    const result = await pool.query(
+    await pool.query(
       `INSERT INTO expert_camp
        (campId,name,date,expertLat,expertLon,men,women,syringe,pipe,sandwich,type,campNotes,logId,nowTime,soup)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
-       RETURNING campId`,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
       [campId, name, date, expertLat, expertLon, men, women, syringe, pipe, sandwich, type, campNotes, logId, nowTime, soup]
     );
 
-    res.json({ success: true, campId: result.rows[0].campid });
+    res.json({ success: true }); // no ID returned
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
@@ -122,7 +120,7 @@ app.get("/data", async (req, res) => {
   }
 });
 
-// Get all camps
+// Get all expert camps
 app.get("/camps", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM expert_camp ORDER BY campId DESC");
@@ -136,13 +134,10 @@ app.get("/camps", async (req, res) => {
 app.get("/view-db", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM expert_log");
-    const rows = result.rows;
-
-    let html = "<h2>Experts Table</h2>";
-    html += "<table border='1' cellpadding='5' cellspacing='0'>";
+    let html = "<h2>Experts Table</h2><table border='1' cellpadding='5' cellspacing='0'>";
     html += "<tr><th>ID</th><th>Name</th><th>Date</th><th>Total Men</th><th>Total Women</th><th>Total Syringes</th><th>Total Pipes</th><th>Total Sandwiches</th><th>Notes</th><th>Total Soup</th></tr>";
 
-    rows.forEach(row => {
+    result.rows.forEach(row => {
       html += `<tr>
         <td>${row.logid}</td>
         <td>${row.name}</td>
@@ -168,13 +163,10 @@ app.get("/view-db", async (req, res) => {
 app.get("/view-camps", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM expert_camp ORDER BY campId DESC");
-    const rows = result.rows;
-
-    let html = "<h2>Expert Camps Table</h2>";
-    html += "<table border='1' cellpadding='5' cellspacing='0'>";
+    let html = "<h2>Expert Camps Table</h2><table border='1' cellpadding='5' cellspacing='0'>";
     html += "<tr><th>ID</th><th>Name</th><th>Date</th><th>Lat</th><th>Lon</th><th>Men</th><th>Women</th><th>Syringe</th><th>Pipe</th><th>Sandwich</th><th>Type</th><th>Notes</th><th>Log ID</th><th>Time</th><th>Soup</th></tr>";
 
-    rows.forEach(row => {
+    result.rows.forEach(row => {
       html += `<tr>
         <td>${row.campid}</td>
         <td>${row.name}</td>
