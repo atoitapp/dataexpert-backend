@@ -156,35 +156,31 @@ app.get("/camps", async (req, res) => {
 /* =========================
    View database as HTML
    ========================= */
-// View Expert_log
+
+//View Expert Log
 
 app.get("/view-db", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM expert_log");
-    let html = "<h2>Expert Log</h2><table border='1'>";
-    html += `
-      <tr>
-        <th>ID</th><th>Name</th><th>Date</th>
-        <th>Men</th><th>Women</th><th>Syringe</th>
-        <th>Pipe</th><th>Sandwich</th><th>Soup</th><th>Notes</th>
-      </tr>
-    `;
+    const rows = result.rows;
 
-    result.rows.forEach(r => {
-      html += `
-        <tr>
-          <td>${r.logid}</td>
-          <td>${r.name}</td>
-          <td>${r.date}</td>
-          <td>${r.totalmen}</td>
-          <td>${r.totalwomen}</td>
-          <td>${r.totalsyringe}</td>
-          <td>${r.totalpipe}</td>
-          <td>${r.totalsandwich}</td>
-          <td>${r.totalsoup}</td>
-          <td>${r.notes}</td>
-        </tr>
-      `;
+    let html = "<h2>Experts Table</h2>";
+    html += "<table border='1' cellpadding='5' cellspacing='0'>";
+    html += "<tr><th>ID</th><th>Name</th><th>Date</th><th>Total Men</th><th>Total Women</th><th>Total Syringes</th><th>Total Pipes</th><th>Total Sandwiches</th><th>Notes</th><th>Total Soup</th></tr>";
+
+    rows.forEach(row => {
+      html += `<tr>
+        <td>${row.logid}</td>
+        <td>${row.name}</td>
+        <td>${row.date}</td>
+        <td>${row.totalmen}</td>
+        <td>${row.totalwomen}</td>
+        <td>${row.totalsyringe}</td>
+        <td>${row.totalpipe}</td>
+        <td>${row.totalsandwich}</td>
+        <td>${row.notes}</td>
+        <td>${row.totalsoup}</td>
+      </tr>`;
     });
 
     html += "</table>";
@@ -194,44 +190,43 @@ app.get("/view-db", async (req, res) => {
   }
 });
 
-// View Expert_Camp
+// View Expert Camps
 
 app.get("/view-camps", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM expert_camp");
-    let html = "<h2>Expert Camps</h2><table border='1'>";
-    html += `
-      <tr>
-        <th>ID</th><th>Name</th><th>Date</th>
-        <th>Lat</th><th>Lon</th>
-        <th>Men</th><th>Women</th>
-        <th>Syringe</th><th>Pipe</th>
-        <th>Sandwich</th><th>Soup</th>
-        <th>Type</th><th>Notes</th>
-        <th>Log ID</th><th>Time</th>
-      </tr>
-    `;
+    const rows = result.rows;
 
-    result.rows.forEach(r => {
-      html += `
-        <tr>
-          <td>${r.campid}</td>
-          <td>${r.name}</td>
-          <td>${r.date}</td>
-          <td>${r.expertlat}</td>
-          <td>${r.expertlon}</td>
-          <td>${r.men}</td>
-          <td>${r.women}</td>
-          <td>${r.syringe}</td>
-          <td>${r.pipe}</td>
-          <td>${r.sandwich}</td>
-          <td>${r.soup}</td>
-          <td>${r.type}</td>
-          <td>${r.campnotes}</td>
-          <td>${r.logid}</td>
-          <td>${r.nowtime}</td>
-        </tr>
-      `;
+    let html = "<h2>Expert Camps</h2>";
+    html += "<table border='1' cellpadding='5' cellspacing='0'>";
+    html += `<tr>
+      <th>ID</th><th>Name</th><th>Date</th>
+      <th>Lat</th><th>Lon</th>
+      <th>Men</th><th>Women</th>
+      <th>Syringe</th><th>Pipe</th>
+      <th>Sandwich</th><th>Soup</th>
+      <th>Type</th><th>Notes</th>
+      <th>Log ID</th><th>Time</th>
+    </tr>`;
+
+    rows.forEach(row => {
+      html += `<tr>
+        <td>${row.campid}</td>
+        <td>${row.name}</td>
+        <td>${row.date}</td>
+        <td>${row.expertlat}</td>
+        <td>${row.expertlon}</td>
+        <td>${row.men}</td>
+        <td>${row.women}</td>
+        <td>${row.syringe}</td>
+        <td>${row.pipe}</td>
+        <td>${row.sandwich}</td>
+        <td>${row.soup}</td>
+        <td>${row.type}</td>
+        <td>${row.campnotes}</td>
+        <td>${row.logid}</td>
+        <td>${row.nowtime}</td>
+      </tr>`;
     });
 
     html += "</table>";
@@ -240,7 +235,6 @@ app.get("/view-camps", async (req, res) => {
     res.status(500).send(err.message);
   }
 });
-
 
 /* =========================
    Start server
@@ -249,3 +243,4 @@ app.get("/view-camps", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
