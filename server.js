@@ -9,29 +9,17 @@ app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
 /* =========================
-   PostgreSQL Connections
+   PostgreSQL Connection
    ========================= */
 
-// Render Postgres
-const renderPool = new Pool({
-  connectionString: process.env.RENDER_DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL, // Single database URL
+  ssl: { rejectUnauthorized: false } // required for Render/Neon
 });
 
-// Neon Postgres
-const neonPool = new Pool({
-  connectionString: process.env.NEON_DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
-
-// Test connections
-renderPool.connect()
-  .then(() => console.log("Connected to Render PostgreSQL"))
-  .catch(err => console.error("Render DB connection error:", err));
-
-neonPool.connect()
-  .then(() => console.log("Connected to Neon PostgreSQL"))
-  .catch(err => console.error("Neon DB connection error:", err));
+pool.connect()
+  .then(() => console.log("Connected to PostgreSQL"))
+  .catch(err => console.error("Postgres connection error:", err));
 
 /* =========================
    Create tables if not exists
@@ -72,15 +60,10 @@ CREATE TABLE IF NOT EXISTS expert_camp (
 );
 `;
 
-// Initialize tables in both databases
 async function initTables() {
-  await renderPool.query(createExpertLogSQL);
-  await neonPool.query(createExpertLogSQL);
-
-  await renderPool.query(createExpertCampSQL);
-  await neonPool.query(createExpertCampSQL);
-
-  console.log("All tables are ready in both databases");
+  await pool.query(createExpertLogSQL);
+  await pool.query(createExpertCampSQL);
+  console.log("Tables ready in the database");
 }
 
 initTables();
@@ -96,14 +79,9 @@ app.post("/save", async (req, res) => {
       notes, totalSoup
     } = req.body;
 
-    const values = [
-      name, date, totalMen, totalWomen,
-      totalSyringe, totalPipe, totalSandwich,
-      notes, totalSoup
-    ];
+    const values = [name, date, totalMen, totalWomen, totalSyringe, totalPipe, totalSandwich, notes, totalSoup];
 
-    // Save to Render
-    const renderResult = await renderPool.query(
+    const result = await pool.query(
       `INSERT INTO expert_log
        (name, date, totalMen, totalWomen, totalSyringe, totalPipe, totalSandwich, notes, totalSoup)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
@@ -111,15 +89,7 @@ app.post("/save", async (req, res) => {
       values
     );
 
-    // Save to Neon
-    await neonPool.query(
-      `INSERT INTO expert_log
-       (name, date, totalMen, totalWomen, totalSyringe, totalPipe, totalSandwich, notes, totalSoup)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
-      values
-    );
-
-    res.json({ success: true, logId: renderResult.rows[0].logid });
+    res.json({ success: true, logId: result.rows[0].logid });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
@@ -137,22 +107,9 @@ app.post("/save-camp", async (req, res) => {
       type, campNotes, logId, nowTime, soup
     } = req.body;
 
-    const values = [
-      name, date, expertLat, expertLon,
-      men, women, syringe, pipe, sandwich,
-      type, campNotes, logId, nowTime, soup
-    ];
+    const values = [name, date, expertLat, expertLon, men, women, syringe, pipe, sandwich, type, campNotes, logId, nowTime, soup];
 
-    // Save to Render
-    await renderPool.query(
-      `INSERT INTO expert_camp
-      (name,date,expertLat,expertLon,men,women,syringe,pipe,sandwich,type,campNotes,logId,nowTime,soup)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
-      values
-    );
-
-    // Save to Neon
-    await neonPool.query(
+    await pool.query(
       `INSERT INTO expert_camp
       (name,date,expertLat,expertLon,men,women,syringe,pipe,sandwich,type,campNotes,logId,nowTime,soup)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
@@ -160,7 +117,6 @@ app.post("/save-camp", async (req, res) => {
     );
 
     res.json({ success: true });
-
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
@@ -172,7 +128,7 @@ app.post("/save-camp", async (req, res) => {
    ========================= */
 app.get("/data", async (req, res) => {
   try {
-    const result = await renderPool.query("SELECT * FROM expert_log ORDER BY logId DESC");
+    const result = await pool.query("SELECT * FROM expert_log ORDER BY logId DESC");
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -184,7 +140,7 @@ app.get("/data", async (req, res) => {
    ========================= */
 app.get("/camps", async (req, res) => {
   try {
-    const result = await renderPool.query("SELECT * FROM expert_camp ORDER BY campId DESC");
+    const result = await pool.query("SELECT * FROM expert_camp ORDER BY campId DESC");
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -196,7 +152,7 @@ app.get("/camps", async (req, res) => {
    ========================= */
 app.get("/view-db", async (req, res) => {
   try {
-    const result = await renderPool.query("SELECT * FROM expert_log");
+    const result = await pool.query("SELECT * FROM expert_log");
     const rows = result.rows;
 
     let html = "<h2>Experts Table</h2>";
@@ -215,6 +171,45 @@ app.get("/view-db", async (req, res) => {
         <td>${row.totalsandwich}</td>
         <td>${row.notes}</td>
         <td>${row.totalsoup}</td>
+      </tr>`;
+    });
+
+    html += "</table>";
+    res.send(html);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+/* =========================
+   View expert_camp as HTML
+   ========================= */
+app.get("/view-camps", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM expert_camp ORDER BY campId DESC");
+    const rows = result.rows;
+
+    let html = "<h2>Expert Camps Table</h2>";
+    html += "<table border='1' cellpadding='5' cellspacing='0'>";
+    html += "<tr><th>ID</th><th>Name</th><th>Date</th><th>Lat</th><th>Lon</th><th>Men</th><th>Women</th><th>Syringe</th><th>Pipe</th><th>Sandwich</th><th>Type</th><th>Notes</th><th>Log ID</th><th>Time</th><th>Soup</th></tr>";
+
+    rows.forEach(row => {
+      html += `<tr>
+        <td>${row.campid}</td>
+        <td>${row.name}</td>
+        <td>${row.date}</td>
+        <td>${row.expertlat}</td>
+        <td>${row.expertlon}</td>
+        <td>${row.men}</td>
+        <td>${row.women}</td>
+        <td>${row.syringe}</td>
+        <td>${row.pipe}</td>
+        <td>${row.sandwich}</td>
+        <td>${row.type}</td>
+        <td>${row.campnotes}</td>
+        <td>${row.logid}</td>
+        <td>${row.nowtime}</td>
+        <td>${row.soup}</td>
       </tr>`;
     });
 
