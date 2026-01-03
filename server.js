@@ -1,7 +1,6 @@
 const express = require("express");
-const sqlite3 = require("sqlite3").verbose();
+const { Pool } = require("pg");
 const cors = require("cors");
-const path = require("path");
 
 const app = express();
 app.use(cors());
@@ -9,19 +8,26 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-// Database stored in server root (ephemeral)
-const DB_PATH = path.join(__dirname, "expert_log_database.db");
+/* =========================
+   PostgreSQL (Render)
+   ========================= */
 
-// Connect to SQLite
-const db = new sqlite3.Database(DB_PATH, (err) => {
-  if (err) console.error(err.message);
-  else console.log("Connected to SQLite database at " + DB_PATH);
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL
 });
 
-// Create expert_log table if it doesn't exist
-db.run(`
+pool
+  .connect()
+  .then(() => console.log("Connected to Render PostgreSQL"))
+  .catch(err => console.error("Postgres connection error:", err));
+
+/* =========================
+   Create table if not exists
+   ========================= */
+
+pool.query(`
   CREATE TABLE IF NOT EXISTS expert_log (
-    logId INTEGER PRIMARY KEY AUTOINCREMENT,
+    logId SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     date TEXT NOT NULL,
     totalMen INTEGER NOT NULL,
@@ -32,75 +38,106 @@ db.run(`
     notes TEXT NOT NULL,
     totalSoup INTEGER NOT NULL
   )
-`);
+`)
+.then(() => console.log("expert_log table ready"))
+.catch(err => console.error(err));
 
-// Save new log entry
-app.post("/save", (req, res) => {
-  const {
-    name,
-    date,
-    totalMen,
-    totalWomen,
-    totalSyringe,
-    totalPipe,
-    totalSandwich,
-    notes,
-    totalSoup
-  } = req.body;
+/* =========================
+   Save new log entry
+   ========================= */
 
-  const sql = `
-    INSERT INTO expert_log
-    (name, date, totalMen, totalWomen, totalSyringe, totalPipe, totalSandwich, notes, totalSoup)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
+app.post("/save", async (req, res) => {
+  try {
+    const {
+      name,
+      date,
+      totalMen,
+      totalWomen,
+      totalSyringe,
+      totalPipe,
+      totalSandwich,
+      notes,
+      totalSoup
+    } = req.body;
 
-  db.run(
-    sql,
-    [name, date, totalMen, totalWomen, totalSyringe, totalPipe, totalSandwich, notes, totalSoup],
-    function (err) {
-      if (err) return res.status(500).json(err);
-      res.json({ success: true, logId: this.lastID });
-    }
-  );
+    const result = await pool.query(
+      `
+      INSERT INTO expert_log
+      (name, date, totalMen, totalWomen, totalSyringe, totalPipe, totalSandwich, notes, totalSoup)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+      RETURNING logId
+      `,
+      [
+        name,
+        date,
+        totalMen,
+        totalWomen,
+        totalSyringe,
+        totalPipe,
+        totalSandwich,
+        notes,
+        totalSoup
+      ]
+    );
+
+    res.json({ success: true, logId: result.rows[0].logid });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Get all log entries
-app.get("/data", (req, res) => {
-  db.all("SELECT * FROM expert_log", [], (err, rows) => {
-    if (err) return res.status(500).json(err);
-    res.json(rows);
-  });
+/* =========================
+   Get all log entries
+   ========================= */
+
+app.get("/data", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM expert_log ORDER BY logId DESC");
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// View database in a table
-app.get("/view-db", (req, res) => {
-  db.all("SELECT * FROM expert_log", [], (err, rows) => {
-    if (err) return res.status(500).send(err.message);
+/* =========================
+   View database as HTML
+   ========================= */
+
+app.get("/view-db", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM expert_log");
+    const rows = result.rows;
 
     let html = "<h2>Experts Table</h2>";
     html += "<table border='1' cellpadding='5' cellspacing='0'>";
-    html += "<tr><th>ID</th><th>Name</th><th>Date</th><th>Total Men</th><th>Total Women</th><th>Total Syringes</th><th>Total Pipes</th><th>Total Sandwichs</th><th>Notes</th><th>Total Soup</th></tr>";
+    html += "<tr><th>ID</th><th>Name</th><th>Date</th><th>Total Men</th><th>Total Women</th><th>Total Syringes</th><th>Total Pipes</th><th>Total Sandwiches</th><th>Notes</th><th>Total Soup</th></tr>";
 
     rows.forEach(row => {
       html += `<tr>
-        <td>${row.logId}</td>
+        <td>${row.logid}</td>
         <td>${row.name}</td>
         <td>${row.date}</td>
-        <td>${row.totalMen}</td>
-        <td>${row.totalWomen}</td>
-        <td>${row.totalSyringe}</td>
-        <td>${row.totalPipe}</td>
-        <td>${row.totalSandwich}</td>
+        <td>${row.totalmen}</td>
+        <td>${row.totalwomen}</td>
+        <td>${row.totalsyringe}</td>
+        <td>${row.totalpipe}</td>
+        <td>${row.totalsandwich}</td>
         <td>${row.notes}</td>
-        <td>${row.totalSoup}</td>
+        <td>${row.totalsoup}</td>
       </tr>`;
     });
 
     html += "</table>";
     res.send(html);
-  });
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
 });
-//This should be at the end of the code
+
+/* =========================
+   Start server
+   ========================= */
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
