@@ -1,7 +1,6 @@
 const express = require("express");
 const { Pool } = require("pg");
 const cors = require("cors");
-console.log(req.body);
 
 const app = express();
 app.use(cors());
@@ -251,6 +250,7 @@ app.get("/view-camps", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
 
 
 
