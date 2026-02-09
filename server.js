@@ -36,7 +36,8 @@ CREATE TABLE IF NOT EXISTS expert_log (
   totalpipe INTEGER NOT NULL,
   totalsandwich INTEGER NOT NULL,
   notes TEXT NOT NULL,
-  totalsoup INTEGER NOT NULL
+  totalsoup INTEGER NOT NULL,
+  totalsnack INTEGER NOT NULL
 );
 `;
 
@@ -56,7 +57,8 @@ CREATE TABLE IF NOT EXISTS expert_camp (
   campnotes TEXT NOT NULL,
   logid UUID NOT NULL REFERENCES expert_log(logid) ON DELETE CASCADE,
   nowtime TEXT NOT NULL,
-  soup INTEGER NOT NULL
+  soup INTEGER NOT NULL,
+  snack INTEGER NOT NULL
 );
 `;
 
@@ -85,16 +87,17 @@ app.post("/save", async (req, res) => {
       totalpipe,
       totalsandwich,
       notes,
-      totalsoup
+      totalsoup,
+      totalsnack
     } = req.body;
 
     await pool.query(
       `
       INSERT INTO expert_log
-      (logid,name,date,totalmen,totalwomen,totalsyringe,totalpipe,totalsandwich,notes,totalsoup)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+      (logid,name,date,totalmen,totalwomen,totalsyringe,totalpipe,totalsandwich,notes,totalsoup,totalsnack)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
       `,
-      [logid, name, date, totalmen, totalwomen, totalsyringe, totalpipe, totalsandwich, notes, totalsoup]
+      [logid, name, date, totalmen, totalwomen, totalsyringe, totalpipe, totalsandwich, notes, totalsoup, totalsnack]
     );
 
     res.json({ success: true });
@@ -122,16 +125,17 @@ app.post("/save-camp", async (req, res) => {
       campnotes,
       logid,
       nowtime,
-      soup
+      soup,
+      snack
     } = req.body;
 
     await pool.query(
       `
       INSERT INTO expert_camp
-      (campid,name,date,expertlat,expertlon,men,women,syringe,pipe,sandwich,type,campnotes,logid,nowtime,soup)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+      (campid,name,date,expertlat,expertlon,men,women,syringe,pipe,sandwich,type,campnotes,logid,nowtime,soup, snack)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
       `,
-      [campid, name, date, expertlat, expertlon, men, women, syringe, pipe, sandwich, type, campnotes, logid, nowtime, soup]
+      [campid, name, date, expertlat, expertlon, men, women, syringe, pipe, sandwich, type, campnotes, logid, nowtime, soup, snack]
     );
 
     res.json({ success: true });
@@ -166,7 +170,7 @@ app.get("/view-db", async (req, res) => {
 
     let html = "<h2>Experts Table</h2>";
     html += "<table border='1' cellpadding='5' cellspacing='0'>";
-    html += "<tr><th>ID</th><th>Name</th><th>Date</th><th>Total Men</th><th>Total Women</th><th>Total Syringes</th><th>Total Pipes</th><th>Total Sandwiches</th><th>Notes</th><th>Total Soup</th></tr>";
+    html += "<tr><th>ID</th><th>Name</th><th>Date</th><th>Total Men</th><th>Total Women</th><th>Total Syringes</th><th>Total Pipes</th><th>Total Sandwiches</th><th>Notes</th><th>Total Soup</th><th>Total Snack</th></tr>";
 
     rows.forEach(row => {
       html += `<tr>
@@ -180,6 +184,7 @@ app.get("/view-db", async (req, res) => {
         <td>${row.totalsandwich}</td>
         <td>${row.notes}</td>
         <td>${row.totalsoup}</td>
+        <td>${row.totalsnack}</td>
       </tr>`;
     });
 
@@ -207,6 +212,7 @@ app.get("/view-camps", async (req, res) => {
       <th>Sandwich</th><th>Soup</th>
       <th>Type</th><th>Notes</th>
       <th>Log ID</th><th>Time</th>
+      <th>Snack</th>
     </tr>`;
 
     rows.forEach(row => {
@@ -226,6 +232,7 @@ app.get("/view-camps", async (req, res) => {
         <td>${row.campnotes}</td>
         <td>${row.logid}</td>
         <td>${row.nowtime}</td>
+        <td>${row.snack}</td>
       </tr>`;
     });
 
@@ -243,4 +250,5 @@ app.get("/view-camps", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
 
